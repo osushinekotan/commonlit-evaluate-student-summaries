@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "tempura"
+name = "commonlit-evaluate-student-summaries"
 version = "0.1.0"
 description = "python project template"
 authors = ["osushinekotan"]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 pytest = "^7.4.0"
 
 
@@ -20,7 +20,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-target-version = "py311" 
+target-version = "py310" 
 unfixable = ["F401", "F841"]
 ignore = ["E501"]
 line-length = 120
