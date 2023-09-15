@@ -11,18 +11,14 @@ if ! gsutil ls gs://$BUCKET_NAME; then
 fi
 
 # install gcsfuse 
-if ! command -v gcsfuse &> /dev/null; then
-  export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s`
-  echo "deb http://packages.cloud.google.com/apt $GCSFUSE_REPO main" | sudo tee /etc/apt/sources.list.d/gcsfuse.list
-  curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-  sudo apt-get update
-  sudo apt-get install -y gcsfuse
-fi
+export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s`
+echo "deb http://packages.cloud.google.com/apt $GCSFUSE_REPO main" | sudo tee /etc/apt/sources.list.d/gcsfuse.list
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install -y fuse gcsfuse
 
 # mount bucket at resources
-if ! mountpoint -q $MOUNT_DIR; then
-  gcsfuse $BUCKET_NAME $MOUNT_DIR
-  echo "Mounted $BUCKET_NAME at $MOUNT_DIR."
-else
-  echo "$MOUNT_DIR is already mounted."
-fi
+sudo gcsfuse -o allow_other -file-mode=777 -dir-mode=777 $BUCKET_NAME $MOUNT_DIR
+echo "Mounted $BUCKET_NAME at $MOUNT_DIR."
+
+# unmount : sudo fusermount -u {mountpoint}
