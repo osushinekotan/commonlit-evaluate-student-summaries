@@ -7,7 +7,7 @@ gcloud auth login
 
 # checke bucket
 if ! gsutil ls gs://$BUCKET_NAME; then
-  gcloud storage buckets create $BUCKET_NAME
+  gcloud storage buckets create gs://$BUCKET_NAME --location=us-central1
 fi
 
 # install gcsfuse 
