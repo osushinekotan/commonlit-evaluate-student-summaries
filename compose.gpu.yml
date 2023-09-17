@@ -24,3 +24,5 @@ services:
           devices:
           - driver: nvidia
             capabilities: [gpu]
+    environment:
+      - PYTHONPATH=/workspace

@@ -15,3 +15,5 @@ services:
     tty: true
     env_file:
       - ./.env
+    environment:
+      - PYTHONPATH=/workspace
