@@ -62,9 +62,9 @@ class Logger:
         used_memory = memory_info.used / (1024**3)  # in GB
         memory_percentage = memory_info.percent
 
-        self.info(f"- Total Memory: {total_memory:.2f} GB 💾")
-        self.info(f"- Used Memory: {used_memory:.2f} GB 💾")
-        self.info(f"- Memory Usage Percentage: {memory_percentage}% 📊")
+        self.info(f"Total Memory: {total_memory:.2f} GB 💾")
+        self.info(f"Used Memory: {used_memory:.2f} GB 💾")
+        self.info(f"Memory Usage Percentage: {memory_percentage}% 📊")
 
     @contextmanager
     def profile(self, target: str | None = None) -> None:
@@ -77,5 +77,5 @@ class Logger:
             end_time = time.time()
             elapsed_time = end_time - start_time
             self.info(f"\n End {target} ✨")
-            self.info(f"- Elapsed time: {elapsed_time:.2f} seconds ⏰")
+            self.info(f"Elapsed time: {elapsed_time:.2f} seconds ⏰")
             self.log_memory_usage()
