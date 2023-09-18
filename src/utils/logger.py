@@ -76,6 +76,6 @@ class Logger:
         finally:
             end_time = time.time()
             elapsed_time = end_time - start_time
-            self.info(f"\n End {target} ✨")
             self.info(f"Elapsed time: {elapsed_time:.2f} seconds ⏰")
             self.log_memory_usage()
+            self.info(f"End {target} ✨")
