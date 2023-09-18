@@ -1,0 +1,12 @@
+# @package _global_
+
+defaults:
+  - _self_
+  - meta: default
+  - paths: default
+  - hydra: default
+  - dataset: default
+  - model: default
+  - optimizer: default
+  - scheduler: default
+  - experiment: ???

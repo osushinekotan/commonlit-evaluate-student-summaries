@@ -1,0 +1,11 @@
+# path to root directory
+root_dir: ./
+
+# path to resources directory
+resource_dir: ${paths.root_dir}/resources/
+input_dir: ${paths.resource_dir}/inputs/
+output_dir: ${paths.resource_dir}/outputs/${hydra.job.override_dirname}
+artifact_dir: ${paths.resource_dir}/artifacts/${hydra.job.override_dirname}
+
+# path to logging directory
+log_dir: ${paths.root_dir}/logs/
