@@ -5,6 +5,7 @@ root_dir: ./
 resource_dir: ${paths.root_dir}/resources/
 input_dir: ${paths.resource_dir}/inputs/
 output_dir: ${paths.resource_dir}/outputs/${hydra.job.override_dirname}
+misc_dir: ${paths.resource_dir}/misc/
 
 # path to logging directory
 log_dir: ${paths.root_dir}/logs/
