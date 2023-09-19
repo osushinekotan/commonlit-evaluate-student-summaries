@@ -70,7 +70,7 @@ class Logger:
     def profile(self, target: str | None = None) -> None:
         target = self.logger.name if target is None else target
         start_time = time.time()
-        self.info(f"\n Start {target} 🚀 ")
+        self.info(f"# -------------- # Start {target} 🚀 # -------------- #")
         try:
             yield
         finally:
@@ -78,4 +78,4 @@ class Logger:
             elapsed_time = end_time - start_time
             self.info(f"Elapsed time: {elapsed_time:.2f} seconds ⏰")
             self.log_memory_usage()
-            self.info(f"End {target} ✨")
+            self.info(f"# -------------- # End {target} ✨ # -------------- #")
