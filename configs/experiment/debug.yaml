@@ -8,3 +8,46 @@ defaults:
   - override /model: default
   - override /optimizer: default
   - override /scheduler: default
+
+model_name: "microsoft/deberta-v3-base"
+gradient_checkpointing_enable: true
+max_length: 12
+gradient_accumulation_steps: 1
+out_features: 2
+batch_scheduler: true
+
+train_dataloader:
+  _target_: torch.utils.data.DataLoader
+  _partial_: true
+  batch_size: 2
+  num_workers: -1
+  pin_memory: true
+  drop_last: true
+
+valid_dataloader:
+  _target_: torch.utils.data.DataLoader
+  _partial_: true
+  batch_size: 2
+  num_workers: -1
+  pin_memory: true
+  drop_last: false
+
+test_dataloader:
+  _target_: torch.utils.data.DataLoader
+  _partial_: true
+  batch_size: 2
+  num_workers: -1
+  pin_memory: true
+  drop_last: false
+
+optimizer:
+  _target_: transformers.get_cosine_schedule_with_warmup
+  _partial_: true
+  num_warmup_steps: 100
+  num_cycles: 0.5
+
+criterion:
+  _target_: src.tools.torch.metrics.MCRMSELoss
+
+metrics:
+  _target_: src.tools.torch.metrics.mcrmse_score

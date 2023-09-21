@@ -1,0 +1,9 @@
+train_dataset:
+  _target_: src.tools.torch.dataset.CommonlitDatasetV1
+  _partial_: true
+  is_train: true
+
+test_dataset:
+  _target_: src.tools.torch.dataset.CommonlitDatasetV1
+  _partial_: true
+  is_train: false

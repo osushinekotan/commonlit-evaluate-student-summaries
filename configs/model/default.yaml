@@ -1,0 +1,3 @@
+CommonLitModelV1:
+  _target_: src.tools.torch.model.CommonLitModelV1
+  _partial_: true
