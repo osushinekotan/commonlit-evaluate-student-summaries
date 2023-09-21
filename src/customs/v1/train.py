@@ -2,6 +2,7 @@ import gc
 import os
 from pathlib import Path
 
+import hydra
 import joblib
 import numpy as np
 import pandas as pd
@@ -99,6 +100,45 @@ def train_loop(
     torch.cuda.empty_cache()
     gc.collect()
 
-    # Load and return the best validation outputs.
-    best_validation_outputs = joblib.load(output_dir / "output.pkl")
-    return best_validation_outputs
+
+def train_fold(cfg: DictConfig, train_df: pd.DataFrame) -> np.ndarray:
+    num_fold = cfg.experiment.num_fold
+    valid_folds = cfg.experiment.valid_folds
+    overwrite_fold = cfg.experiment.overwrite_fold
+
+    output_dir = Path(cfg.paths.output_dir)
+
+    oof_outputs = []
+    for i_fold in range(num_fold):
+        if i_fold not in valid_folds:
+            continue
+
+        i_output_dir = output_dir / f"fold_{i_fold}"
+        if (not i_output_dir.is_dir()) or (overwrite_fold):
+            train_feature_df = train_df[train_df["fold"] != i_fold].reset_index(drop=True)
+            valid_feature_df = train_df[train_df["fold"] == i_fold].reset_index(drop=True)
+
+            with logger.profile(target=f"train : fold={i_fold}"):
+                train_loop(
+                    cfg=cfg,
+                    train_df=train_feature_df,
+                    valid_df=valid_feature_df,
+                    output_dir=i_output_dir,
+                )
+
+        oof_outputs.append(joblib.load(output_dir / "output.pkl")["outputs"])
+    return np.concatenate(oof_outputs, axis=0)
+
+
+@hydra.main(version_base=None, config_path="/workspace/configs/", config_name="config")
+def run(cfg: DictConfig) -> None:
+    filepath = Path(cfg.paths.misc_dir) / "train.csv"
+    train_df = pd.read_csv(filepath)
+
+    oof_output = train_fold(cfg=cfg, train_df=train_df)
+    joblib.dump(oof_output, cfg.paths.output_dir / "oof_output.joblib")
+
+
+if __name__ == "__main__":
+    with logger.profile():
+        run()
