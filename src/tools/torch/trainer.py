@@ -114,3 +114,22 @@ def valid_fn(
     outputs = np.concatenate(outputs)
     loss = total_loss / batch_count
     return {"loss": loss, "outputs": outputs}
+
+
+def inference_fn(model: nn.Module, dataloader: DataLoader, device: str) -> dict[str, np.ndarray]:
+    outputs = []
+    model.to(device)
+    model.inference()
+
+    iteration_bar = tqdm(enumerate(dataloader), total=len(dataloader))
+    for _, batch in iteration_bar:
+        for k, v in batch.items():
+            batch[k] = v.to(device)
+
+        with torch.no_grad():
+            batch_outputs = model(batch)
+
+        batch_outputs = batch_outputs.cpu().numpy()
+
+    outputs = np.concatenate(outputs)
+    return {"outputs": outputs}
