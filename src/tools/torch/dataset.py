@@ -5,9 +5,10 @@ from torch.utils.data import Dataset
 from transformers import AutoTokenizer
 
 
-class CommonlitTrainDatasetV1(Dataset):
-    def __init__(self, cfg: DictConfig, df: pd.DataFrame):
+class CommonlitDatasetV1(Dataset):
+    def __init__(self, cfg: DictConfig, df: pd.DataFrame, is_train=True):
         self.df = df
+        self.is_train = is_train
         self.tokenizer = AutoTokenizer.from_pretrained(cfg.experiment.model_name)
         self.max_length = cfg.experiment.max_length
 
@@ -20,19 +21,23 @@ class CommonlitTrainDatasetV1(Dataset):
             + self.tokenizer.sep_token
             + df["prompt_text"]
         ).tolist()
-        self.targets = df[["content", "wording"]].to_numpy()
+
+        if self.is_train:
+            self.targets = df[["content", "wording"]].to_numpy()
 
     def __len__(self):
         return len(self.texts)
 
     def __getitem__(self, item):
         inputs = self.prepare_input(max_length=self.max_length, tokenizer=self.tokenizer, text=self.texts[item])
-        targets = torch.tensor(self.targets[item], dtype=torch.float16)
-        return {
-            "input_ids": inputs["input_ids"],
-            "attention_mask": inputs["attention_mask"],
-            "targets": targets,
-        }
+        if self.is_train:
+            targets = torch.tensor(self.targets[item], dtype=torch.float16)
+            return {
+                "input_ids": inputs["input_ids"],
+                "attention_mask": inputs["attention_mask"],
+                "targets": targets,
+            }
+        return {"input_ids": inputs["input_ids"], "attention_mask": inputs["attention_mask"]}
 
     @staticmethod
     def prepare_input(max_length: int, tokenizer: AutoTokenizer, text: list[str]):
