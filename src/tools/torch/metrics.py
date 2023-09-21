@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -18,3 +19,9 @@ class MCRMSELoss(nn.Module):
         mcrmse = torch.mean(rmse)
 
         return mcrmse
+
+
+def mcrmse_score(outputs, targets):
+    """Compute the Mean Columnwise Root Mean Square score (negative)."""
+    columnwise_rmse = np.sqrt(np.mean(np.square(targets - outputs), axis=0))
+    return -np.mean(columnwise_rmse)
