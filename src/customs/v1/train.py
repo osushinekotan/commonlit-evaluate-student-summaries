@@ -7,10 +7,10 @@ import joblib
 import numpy as np
 import pandas as pd
 import torch
-import wandb
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 
+import wandb
 from src.tools.torch.trainer import train_fn, valid_fn
 from src.utils.logger import Logger
 from src.utils.nn_utils import calc_steps
@@ -35,7 +35,7 @@ def initialize_wandb(cfg: DictConfig, name: str) -> None:
     wandb.init(
         project=cfg.meta.competition,
         name=name,
-        group=cfg.hydra.job.override_dirname,
+        group=cfg.experiment_name,
         job_type="train",
         anonymous=None,
         reinit=True,
@@ -54,13 +54,13 @@ def train_loop(
     initialize_wandb(cfg=cfg, name=str(output_dir).split("/")[-1])  # NOTE : name is fold index
 
     # Instantiate datasets and dataloaders.
-    train_dataset = instantiate(cfg.train_dataset, cfg=cfg, df=train_df)
-    valid_dataset = instantiate(cfg.train_dataset, cfg=cfg, df=valid_df)
-    train_loader = instantiate(cfg.train_dataloader, dataset=train_dataset)
-    valid_loader = instantiate(cfg.valid_dataloader, dataset=valid_dataset)
+    train_dataset = instantiate(cfg.dataset.train_dataset)(cfg=cfg, df=train_df)
+    valid_dataset = instantiate(cfg.dataset.train_dataset)(cfg=cfg, df=valid_df)
+    train_loader = instantiate(cfg.train_dataloader)(dataset=train_dataset)
+    valid_loader = instantiate(cfg.valid_dataloader)(dataset=valid_dataset)
 
-    model = instantiate(cfg.model, cfg=cfg)
-    optimizer = instantiate(cfg.optimizer, params=model.parameters())
+    model = instantiate(cfg.model)(cfg=cfg)
+    optimizer = instantiate(cfg.optimizer)(parameters=model.parameters())
 
     max_epochs = instantiate(cfg.max_epochs)
     if cfg.batch_scheduler:
@@ -69,9 +69,9 @@ def train_loop(
             max_epochs=max_epochs,
             gradient_accumulation_steps=cfg.gradient_accumulation_steps,
         )  # Calcurate training step for batch scheduling
-        scheduler = instantiate(cfg.scheduler, optimizer=optimizer, num_training_steps=num_training_steps)
+        scheduler = instantiate(cfg.scheduler)(optimizer=optimizer, num_training_steps=num_training_steps)
     else:
-        scheduler = instantiate(cfg.scheduler, optimizer=optimizer)
+        scheduler = instantiate(cfg.scheduler)(optimizer=optimizer)
 
     metrics = instantiate(cfg.metrics)
     criterion = instantiate(cfg.criterion)
@@ -158,15 +158,7 @@ def run(cfg: DictConfig) -> None:
     train_df = pd.read_csv(filepath)
 
     if cfg.debug:
-        prompt_ids = (
-            pd.Series(train_df["prompt_id"].unique())
-            .sample(
-                100,
-                random_state=cfg.seed,
-            )
-            .tolist()
-        )
-        train_df = train_df[train_df["prompt_id"].isin(prompt_ids)].reset_index(drop=True)
+        train_df = train_df.sample(100, random_state=cfg.seed).reset_index(drop=True)
 
     logger.debug(f"train_df : {train_df.shape}")
     logger.debug(f"train_df : \n{train_df.head()}")

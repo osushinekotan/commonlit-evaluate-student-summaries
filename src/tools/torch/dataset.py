@@ -14,7 +14,7 @@ class CommonlitDatasetV1(Dataset):
 
         self.texts = (
             df["text"]
-            + +self.tokenizer.sep_token
+            + self.tokenizer.sep_token
             + df["prompt_title"]
             + self.tokenizer.sep_token
             + df["prompt_question"]

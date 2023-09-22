@@ -9,6 +9,7 @@ defaults:
   - override /optimizer: default
   - override /scheduler: default
 
+experiment_name: ${hydra:job.override_dirname}
 seed: 8823
 debug: true
 overwrite_fold: false
@@ -72,4 +73,4 @@ criterion:
   _target_: src.tools.torch.criterion.MCRMSELoss
 
 metrics:
-  _target_: src.tools.torch.metrics.mcrms_score
+  _target_: src.tools.torch.metrics.MCRMSEScore
