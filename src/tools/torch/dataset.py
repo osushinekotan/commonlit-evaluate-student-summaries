@@ -9,8 +9,8 @@ class CommonlitDatasetV1(Dataset):
     def __init__(self, cfg: DictConfig, df: pd.DataFrame, is_train=True):
         self.df = df
         self.is_train = is_train
-        self.tokenizer = AutoTokenizer.from_pretrained(cfg.experiment.model_name)
-        self.max_length = cfg.experiment.max_length
+        self.tokenizer = AutoTokenizer.from_pretrained(cfg.model_name)
+        self.max_length = cfg.max_length
 
         self.texts = (
             df["text"]
@@ -23,7 +23,7 @@ class CommonlitDatasetV1(Dataset):
         ).tolist()
 
         if self.is_train:
-            self.targets = df[["content", "wording"]].to_numpy()
+            self.targets = df[cfg.target].to_numpy()
 
     def __len__(self):
         return len(self.texts)

@@ -31,6 +31,17 @@ def is_new_best_score(current_best_score: dict | float, new_score: dict) -> bool
     return False
 
 
+def initialize_wandb(cfg: DictConfig, name: str) -> None:
+    wandb.init(
+        project=cfg.meta.competition,
+        name=name,
+        group=cfg.hydra.job.override_dirname,
+        job_type="train",
+        anonymous=None,
+        reinit=True,
+    )
+
+
 def train_loop(
     cfg: DictConfig,
     train_df: pd.DataFrame,
@@ -39,28 +50,31 @@ def train_loop(
 ) -> None:
     """Training loop for a given experiment configuration, training and validation data."""
 
+    # initialize wandb logger by one loop
+    initialize_wandb(cfg=cfg, name=str(output_dir).split("/")[-1])  # NOTE : name is fold index
+
     # Instantiate datasets and dataloaders.
-    train_dataset = instantiate(cfg.experiment.train_dataset, cfg=cfg, df=train_df)
-    valid_dataset = instantiate(cfg.experiment.train_dataset, cfg=cfg, df=valid_df)
-    train_loader = instantiate(cfg.experiment.train_dataloader, dataset=train_dataset)
-    valid_loader = instantiate(cfg.experiment.valid_dataloader, dataset=valid_dataset)
+    train_dataset = instantiate(cfg.train_dataset, cfg=cfg, df=train_df)
+    valid_dataset = instantiate(cfg.train_dataset, cfg=cfg, df=valid_df)
+    train_loader = instantiate(cfg.train_dataloader, dataset=train_dataset)
+    valid_loader = instantiate(cfg.valid_dataloader, dataset=valid_dataset)
 
-    model = instantiate(cfg.experiment.model, cfg=cfg)
-    optimizer = instantiate(cfg.experiment.optimizer, params=model.parameters())
+    model = instantiate(cfg.model, cfg=cfg)
+    optimizer = instantiate(cfg.optimizer, params=model.parameters())
 
-    max_epochs = instantiate(cfg.experiment.max_epochs)
-    if cfg.experiment.batch_scheduler:
+    max_epochs = instantiate(cfg.max_epochs)
+    if cfg.batch_scheduler:
         num_training_steps = calc_steps(
             iters_per_epoch=len(train_loader),
             max_epochs=max_epochs,
-            gradient_accumulation_steps=cfg.experiment.gradient_accumulation_steps,
+            gradient_accumulation_steps=cfg.gradient_accumulation_steps,
         )  # Calcurate training step for batch scheduling
-        scheduler = instantiate(cfg.experiment.scheduler, optimizer=optimizer, num_training_steps=num_training_steps)
+        scheduler = instantiate(cfg.scheduler, optimizer=optimizer, num_training_steps=num_training_steps)
     else:
-        scheduler = instantiate(cfg.experiment.scheduler, optimizer=optimizer)
+        scheduler = instantiate(cfg.scheduler, optimizer=optimizer)
 
-    metrics = instantiate(cfg.experiment.metrics)
-    criterion = instantiate(cfg.experiment.criterion)
+    metrics = instantiate(cfg.metrics)
+    criterion = instantiate(cfg.criterion)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     total_steps = 0  # Track total steps across all epochs.
@@ -110,9 +124,9 @@ def train_loop(
 
 
 def train_fold(cfg: DictConfig, train_df: pd.DataFrame) -> np.ndarray:
-    num_fold = cfg.experiment.num_fold
-    valid_folds = cfg.experiment.valid_folds
-    overwrite_fold = cfg.experiment.overwrite_fold
+    num_fold = cfg.num_fold
+    valid_folds = cfg.valid_folds
+    overwrite_fold = cfg.overwrite_fold
 
     output_dir = Path(cfg.paths.output_dir)
 
@@ -142,6 +156,20 @@ def train_fold(cfg: DictConfig, train_df: pd.DataFrame) -> np.ndarray:
 def run(cfg: DictConfig) -> None:
     filepath = Path(cfg.paths.misc_dir) / "train.csv"
     train_df = pd.read_csv(filepath)
+
+    if cfg.debug:
+        prompt_ids = (
+            pd.Series(train_df["prompt_id"].unique())
+            .sample(
+                100,
+                random_state=cfg.seed,
+            )
+            .tolist()
+        )
+        train_df = train_df[train_df["prompt_id"].isin(prompt_ids)].reset_index(drop=True)
+
+    logger.debug(f"train_df : {train_df.shape}")
+    logger.debug(f"train_df : \n{train_df.head()}")
 
     oof_output = train_fold(cfg=cfg, train_df=train_df)
     joblib.dump(oof_output, cfg.paths.output_dir / "oof_output.joblib")

@@ -7,15 +7,16 @@ class CommonLitModelV1(nn.Module):
     def __init__(self, cfg: DictConfig):
         super().__init__()
 
-        self.model_config = AutoConfig.from_pretrained(cfg.experiment.model, output_hidden_states=True)
-        self.model = AutoModel.from_pretrained(cfg.experiment.model, config=self.model_config)
+        self.model_config = AutoConfig.from_pretrained(cfg.model, output_hidden_states=True)
+        self.model = AutoModel.from_pretrained(cfg.model, config=self.model_config)
 
-        if cfg.experiment.gradient_checkpointing:
+        if cfg.gradient_checkpointing:
             self.model.gradient_checkpointing_enable()
 
+        out_features = len(cfg.target)
         self.out = nn.Linear(
             in_features=self.model_config.hidden_size,
-            out_features=cfg.experiment.out_features,
+            out_features=out_features,
         )
         self._init_weights(self.out)
 

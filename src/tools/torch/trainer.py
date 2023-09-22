@@ -19,10 +19,10 @@ def train_fn(
     wandb_logger: wandb,
     total_step: int,
 ):
-    enable_amp = cfg.experiment.fp16
-    gradient_accumulation_steps = cfg.experiment.gradient_accumulation_steps
-    clip_grad_norm = cfg.experiment.clip_grad_norm
-    batch_scheduler = cfg.experiment.batch_scheduler
+    enable_amp = cfg.fp16
+    gradient_accumulation_steps = cfg.gradient_accumulation_steps
+    clip_grad_norm = cfg.clip_grad_norm
+    batch_scheduler = cfg.batch_scheduler
 
     scaler = GradScaler(enabled=enable_amp)
     model.to(device)
@@ -83,7 +83,7 @@ def valid_fn(
     criterion: nn.Module,
     device: str,
 ):
-    gradient_accumulation_steps = cfg.experiment.gradient_accumulation_steps
+    gradient_accumulation_steps = cfg.gradient_accumulation_steps
 
     outputs = []
     total_loss = 0.0
