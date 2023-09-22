@@ -1,11 +1,12 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import wandb
 from omegaconf import DictConfig
 from torch.cuda.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+
+import wandb
 
 
 def train_fn(
@@ -38,8 +39,8 @@ def train_fn(
 
         with autocast(enabled=enable_amp):
             batch_outputs = model(batch)
-            loss = criterion(batch_outputs, batch["targets"]).item()
-            loss = torch.tensor(loss, device=device) / gradient_accumulation_steps
+            loss = criterion(batch_outputs, batch["targets"])
+            loss = torch.div(loss, gradient_accumulation_steps)
 
         loss_value = loss.item()
         scaler.scale(loss).backward()
@@ -100,7 +101,7 @@ def valid_fn(
         with torch.no_grad():
             batch_outputs = model(batch)
             loss = criterion(batch_outputs, batch["targets"])
-            loss = torch.tensor(loss, device=device) / gradient_accumulation_steps
+            loss = torch.div(loss, gradient_accumulation_steps)
 
         loss_value = loss.item()
         batch_outputs = batch_outputs.cpu().numpy()
@@ -109,6 +110,7 @@ def valid_fn(
         batch_count += batch["targets"].size(0)
 
         ave_loss = total_loss / batch_count
+        outputs.append(batch_outputs)
         iteration_bar.set_description(f"loss: {ave_loss:.4f}")
 
     outputs = np.concatenate(outputs)
@@ -130,6 +132,7 @@ def inference_fn(model: nn.Module, dataloader: DataLoader, device: str) -> dict[
             batch_outputs = model(batch)
 
         batch_outputs = batch_outputs.cpu().numpy()
+        outputs.append(batch_outputs)
 
     outputs = np.concatenate(outputs)
     return {"outputs": outputs}

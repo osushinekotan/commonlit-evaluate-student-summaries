@@ -32,14 +32,24 @@ def is_new_best_score(current_best_score: dict | float, new_score: dict) -> bool
 
 
 def initialize_wandb(cfg: DictConfig, name: str) -> None:
+    debug = "_debug" if cfg.debug else ""
     wandb.init(
         project=cfg.meta.competition,
         name=name,
-        group=cfg.experiment_name,
+        group=cfg.experiment_name + debug,
         job_type="train",
         anonymous=None,
         reinit=True,
     )
+
+
+def collate_fn(data_list):
+    batch = {key: torch.stack([item[key] for item in data_list]) for key in data_list[0].keys()}
+    mask_len = int(batch["attention_mask"].sum(axis=1).max())
+    for k, v in batch.items():
+        if k != "targets":
+            batch[k] = batch[k][:, :mask_len]
+    return batch
 
 
 def train_loop(
@@ -56,13 +66,13 @@ def train_loop(
     # Instantiate datasets and dataloaders.
     train_dataset = instantiate(cfg.dataset.train_dataset)(cfg=cfg, df=train_df)
     valid_dataset = instantiate(cfg.dataset.train_dataset)(cfg=cfg, df=valid_df)
-    train_loader = instantiate(cfg.train_dataloader)(dataset=train_dataset)
-    valid_loader = instantiate(cfg.valid_dataloader)(dataset=valid_dataset)
+    train_loader = instantiate(cfg.train_dataloader)(dataset=train_dataset, collate_fn=collate_fn)
+    valid_loader = instantiate(cfg.valid_dataloader)(dataset=valid_dataset, collate_fn=collate_fn)
 
     model = instantiate(cfg.model)(cfg=cfg)
-    optimizer = instantiate(cfg.optimizer)(parameters=model.parameters())
+    optimizer = instantiate(cfg.optimizer)(params=model.parameters())
 
-    max_epochs = instantiate(cfg.max_epochs)
+    max_epochs = cfg.max_epochs
     if cfg.batch_scheduler:
         num_training_steps = calc_steps(
             iters_per_epoch=len(train_loader),
@@ -99,7 +109,7 @@ def train_loop(
         validation_output = valid_fn(cfg=cfg, model=model, dataloader=valid_loader, criterion=criterion, device=device)
 
         # Evaluate the model's performance using the provided metrics.
-        eval_results = metrics(outputs=validation_output, targets=valid_df["targets"])
+        eval_results = metrics(outputs=validation_output["outputs"], targets=valid_df[cfg.target])
 
         # Log results.
         logs = {
@@ -115,6 +125,8 @@ def train_loop(
         if is_new_best_score(current_best_score=best_score, new_score=eval_results):
             best_score = eval_results
             logger.info(f"epoch {epoch} - best score: {best_score} model 🌈")
+
+            output_dir.mkdir(parents=True, exist_ok=True)
             torch.save(model.state_dict(), output_dir / "model.pth")  # Save the model's state dict.
             joblib.dump(validation_output, output_dir / "output.pkl")  # Save the validation outputs.
 
@@ -148,7 +160,7 @@ def train_fold(cfg: DictConfig, train_df: pd.DataFrame) -> np.ndarray:
                     output_dir=i_output_dir,
                 )
 
-        oof_outputs.append(joblib.load(output_dir / "output.pkl")["outputs"])
+        oof_outputs.append(joblib.load(i_output_dir / "output.pkl")["outputs"])
     return np.concatenate(oof_outputs, axis=0)
 
 
@@ -164,7 +176,7 @@ def run(cfg: DictConfig) -> None:
     logger.debug(f"train_df : \n{train_df.head()}")
 
     oof_output = train_fold(cfg=cfg, train_df=train_df)
-    joblib.dump(oof_output, cfg.paths.output_dir / "oof_output.joblib")
+    joblib.dump(oof_output, Path(cfg.paths.output_dir) / "oof_output.joblib")
 
 
 if __name__ == "__main__":

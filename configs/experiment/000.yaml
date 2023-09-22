@@ -12,10 +12,10 @@ defaults:
 experiment_name: ${hydra:job.override_dirname}
 seed: 8823
 debug: true
-overwrite_fold: false
-overwrite_preprocess: false
+overwrite_fold: true
+overwrite_preprocess: true
 
-num_fold: 10
+num_fold: 5
 valid_folds: [0]
 target: ["content", "wording"]
 
@@ -26,16 +26,20 @@ fold:
   random_state: 8823
 
 model_name: "microsoft/deberta-v3-base"
+max_length: 16
 gradient_checkpointing_enable: true
-max_length: 2
+
+max_epochs: 1
 gradient_accumulation_steps: 1
 batch_scheduler: true
+fp16: true
+clip_grad_norm: 1
 
 train_dataloader:
   _target_: torch.utils.data.DataLoader
   _partial_: true
   batch_size: 2
-  num_workers: -1
+  num_workers: 4
   pin_memory: true
   drop_last: true
 
@@ -43,7 +47,7 @@ valid_dataloader:
   _target_: torch.utils.data.DataLoader
   _partial_: true
   batch_size: 2
-  num_workers: -1
+  num_workers: 4
   pin_memory: true
   drop_last: false
 
@@ -51,7 +55,7 @@ test_dataloader:
   _target_: torch.utils.data.DataLoader
   _partial_: true
   batch_size: 2
-  num_workers: -1
+  num_workers: 4
   pin_memory: true
   drop_last: false
 
