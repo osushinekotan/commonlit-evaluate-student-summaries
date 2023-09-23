@@ -580,6 +580,21 @@ torch = ["torch"]
 typing = ["pydantic (<2.0)", "types-PyYAML", "types-requests", "types-simplejson", "types-toml", "types-tqdm", "types-urllib3"]
 
 [[package]]
+name = "hydra-colorlog"
+version = "1.2.0"
+description = "Enables colorlog for Hydra apps"
+optional = false
+python-versions = "*"
+files = [
+    {file = "hydra-colorlog-1.2.0.tar.gz", hash = "sha256:d44f85008fabd2448c7e3b496c31b44d7610560f6fff74f3673afaa949870899"},
+    {file = "hydra_colorlog-1.2.0-py3-none-any.whl", hash = "sha256:33d05fc11ca9bc7a5d69cfb3c8fb395a1bc52fa1dfe7aca6a6f5ffb57f6e7c4b"},
+]
+
+[package.dependencies]
+colorlog = "*"
+hydra-core = ">=1.0.0"
+
+[[package]]
 name = "hydra-core"
 version = "1.3.2"
 description = "A framework for elegantly configuring complex applications"
@@ -2701,4 +2716,4 @@ test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "aa94e339bde03c4852dccd6688e07564993fed6124497c31f5924917c431dd4b"
+content-hash = "09339071e4fe854c1c696b7e7ef413181b5a937d861e09953d53746fae250a8e"
