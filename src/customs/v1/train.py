@@ -140,7 +140,7 @@ def train_fold(cfg: DictConfig, train_df: pd.DataFrame) -> np.ndarray:
     valid_folds = cfg.valid_folds
     overwrite_fold = cfg.overwrite_fold
 
-    output_dir = Path(cfg.paths.output_dir)
+    output_dir = Path(cfg.paths.artifact_dir)
 
     oof_outputs = []
     for i_fold in range(num_fold):
@@ -175,7 +175,7 @@ def run(cfg: DictConfig) -> None:
     logger.debug(f"train_df : \n{train_df.head()}")
 
     oof_output = train_fold(cfg=cfg, train_df=train_df)
-    joblib.dump(oof_output, Path(cfg.paths.output_dir) / "oof_output.joblib")
+    joblib.dump(oof_output, Path(cfg.paths.artifact_dir) / "oof_output.joblib")
 
 
 @hydra.main(version_base=None, config_path="/workspace/configs/", config_name="config")

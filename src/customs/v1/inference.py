@@ -40,7 +40,7 @@ def inference_fold(cfg: DictConfig, test_df: pd.DataFrame) -> np.ndarray:
     num_fold = cfg.num_fold
     valid_folds = cfg.valid_folds
 
-    output_dir = Path(cfg.paths.output_dir)
+    output_dir = Path(cfg.paths.artifact_dir)
     test_outputs = []
 
     for i_fold in range(num_fold):
@@ -61,7 +61,7 @@ def preprocess(cfg: DictConfig) -> pd.DataFrame:
 def run(cfg: DictConfig) -> None:
     test_df = preprocess(cfg=cfg)
     test_output = inference_fold(cfg=cfg, test_df=test_df)
-    joblib.dump(test_output, Path(cfg.paths.output_dir) / "test_output.pkl")
+    joblib.dump(test_output, Path(cfg.paths.artifact_dir) / "test_output.pkl")
 
 
 @hydra.main(version_base=None, config_path="/workspace/configs/", config_name="config")
