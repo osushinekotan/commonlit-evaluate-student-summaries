@@ -175,7 +175,7 @@ def run(cfg: DictConfig) -> None:
     logger.debug(f"train_df : \n{train_df.head()}")
 
     oof_output = train_fold(cfg=cfg, train_df=train_df)
-    joblib.dump(oof_output, Path(cfg.paths.artifact_dir) / "oof_output.joblib")
+    joblib.dump(oof_output, Path(cfg.paths.artifact_dir) / "oof_output.pkl")
 
 
 @hydra.main(version_base=None, config_path="/workspace/configs/", config_name="config")
