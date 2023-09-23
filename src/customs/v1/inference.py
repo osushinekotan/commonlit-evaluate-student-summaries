@@ -10,9 +10,9 @@ from omegaconf import DictConfig
 
 from src.customs.v1.preprocess import run_preprocess
 from src.tools.torch.trainer import inference_fn
-from src.utils.logger import Logger
+from src.utils.logger import HydraLogger
 
-logger = Logger(__name__)
+logger = HydraLogger(__name__)
 
 # =================================
 # inference (kaggle format)
@@ -58,17 +58,16 @@ def preprocess(cfg: DictConfig) -> pd.DataFrame:
     return test_df
 
 
-def inference(cfg: DictConfig) -> None:
+def run(cfg: DictConfig) -> None:
     test_df = preprocess(cfg=cfg)
     test_output = inference_fold(cfg=cfg, test_df=test_df)
     joblib.dump(test_output, Path(cfg.paths.output_dir) / "test_output.pkl")
 
 
 @hydra.main(version_base=None, config_path="/workspace/configs/", config_name="config")
-def run(cfg: DictConfig):
-    inference(cfg=cfg)
+def main(cfg: DictConfig):
+    run(cfg=cfg)
 
 
 if __name__ == "__main__":
-    with logger.profile():
-        run()
+    main()

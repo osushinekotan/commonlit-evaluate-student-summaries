@@ -12,10 +12,10 @@ from omegaconf import DictConfig
 
 import wandb
 from src.tools.torch.trainer import train_fn, valid_fn
-from src.utils.logger import Logger
+from src.utils.logger import HydraLogger
 from src.utils.nn_utils import calc_steps
 
-logger = Logger(__name__)
+logger = HydraLogger(__name__)
 
 # Log in to wandb using your API key.
 wandb.login(key=os.environ["WANDB_KEY"])
@@ -164,7 +164,6 @@ def train_fold(cfg: DictConfig, train_df: pd.DataFrame) -> np.ndarray:
     return np.concatenate(oof_outputs, axis=0)
 
 
-@hydra.main(version_base=None, config_path="/workspace/configs/", config_name="config")
 def run(cfg: DictConfig) -> None:
     filepath = Path(cfg.paths.misc_dir) / "train.csv"
     train_df = pd.read_csv(filepath)
@@ -179,6 +178,11 @@ def run(cfg: DictConfig) -> None:
     joblib.dump(oof_output, Path(cfg.paths.output_dir) / "oof_output.joblib")
 
 
-if __name__ == "__main__":
+@hydra.main(version_base=None, config_path="/workspace/configs/", config_name="config")
+def main(cfg: DictConfig):
     with logger.profile():
-        run()
+        run(cfg=cfg)
+
+
+if __name__ == "__main__":
+    main()

@@ -6,9 +6,9 @@ import pandas as pd
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 
-from src.utils.logger import Logger
+from src.utils.logger import HydraLogger
 
-logger = Logger(__name__)
+logger = HydraLogger(__name__)
 
 
 def run_preprocess(prompts_df: pd.DataFrame, summaries_df: pd.DataFrame):
@@ -25,7 +25,6 @@ def assign_fold_idx(cfg: DictConfig, train_df: pd.DataFrame) -> pd.DataFrame:
     return train_df
 
 
-@hydra.main(version_base=None, config_path="/workspace/configs/", config_name="config")
 def run(cfg: DictConfig) -> None:
     filepath = Path(cfg.paths.misc_dir) / "train.csv"
     filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -47,6 +46,11 @@ def run(cfg: DictConfig) -> None:
     logger.info(f"save : {filepath}")
 
 
-if __name__ == "__main__":
+@hydra.main(version_base=None, config_path="/workspace/configs/", config_name="config")
+def main(cfg: DictConfig):
     with logger.profile():
-        run()
+        run(cfg=cfg)
+
+
+if __name__ == "__main__":
+    main()

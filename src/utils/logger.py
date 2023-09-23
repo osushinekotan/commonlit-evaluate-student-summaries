@@ -3,56 +3,26 @@ import time
 from contextlib import contextmanager
 
 import psutil
-from colorlog import ColoredFormatter
 
 
-class Logger:
-    def __init__(self, name: str = "", filename=None, level=logging.DEBUG, filemode="a"):
-        self.logger = logging.getLogger(name)
-        self.logger.propagate = False
-        self.logger.setLevel(level)
-
-        # Define formatter
-        log_format = "[%(asctime)s] %(log_color) s[%(name)s] [%(levelname)s] - %(message)s"
-        date_format = "%Y-%m-%d %H:%M:%S"
-        formatter = ColoredFormatter(
-            log_format,
-            datefmt=date_format,
-            reset=True,
-            log_colors={
-                "DEBUG": "cyan",
-                "INFO": "green",
-                "WARNING": "yellow",
-                "ERROR": "red",
-                "CRITICAL": "red,bg_white",
-            },
-        )
-
-        # Check if the logger already has handlers. If not, add new handlers.
-        if not self.logger.handlers:
-            stream_handler = logging.StreamHandler()
-            stream_handler.setFormatter(formatter)
-            self.logger.addHandler(stream_handler)
-
-            if filename is not None:
-                file_handler = logging.FileHandler(filename, mode=filemode)
-                file_handler.setFormatter(formatter)
-                self.logger.addHandler(file_handler)
+class HydraLogger:
+    def __init__(self, name: str) -> None:
+        self.name = name
 
     def debug(self, message):
-        self.logger.debug(message)
+        logging.debug(message)
 
     def info(self, message):
-        self.logger.info(message)
+        logging.info(message)
 
     def warning(self, message):
-        self.logger.warning(message)
+        logging.warning(message)
 
     def error(self, message):
-        self.logger.error(message)
+        logging.error(message)
 
     def critical(self, message):
-        self.logger.critical(message)
+        logging.critical(message)
 
     def log_memory_usage(self) -> None:
         """Logs the current memory usage."""
@@ -68,7 +38,7 @@ class Logger:
 
     @contextmanager
     def profile(self, target: str | None = None) -> None:
-        target = self.logger.name if target is None else target
+        target = self.name if target is None else target
         start_time = time.time()
         self.info(f"# -------------- # Start {target} 🚀 # -------------- #")
         try:

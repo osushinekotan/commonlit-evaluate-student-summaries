@@ -5,9 +5,9 @@ from kaggle import KaggleApi
 from omegaconf import DictConfig
 
 from src.utils.kaggle_utils import download_kaggle_competition_dataset
-from src.utils.logger import Logger
+from src.utils.logger import HydraLogger
 
-logger = Logger(__name__)
+logger = HydraLogger(__name__)
 
 
 @hydra.main(version_base=None, config_path="/workspace/configs/", config_name="config")
