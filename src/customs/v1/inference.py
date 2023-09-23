@@ -20,16 +20,15 @@ logger = Logger(__name__)
 
 
 def inference_loop(cfg: DictConfig, test_df: pd.DataFrame, output_dir: Path) -> None:
-    test_dataset = instantiate(cfg.dataset, cfg=cfg, df=test_df)
-    test_dataloader = instantiate(cfg.test_dataloader, dataset=test_dataset)
+    test_dataset = instantiate(cfg.dataset.test_dataset)(cfg=cfg, df=test_df)
+    test_dataloader = instantiate(cfg.test_dataloader)(dataset=test_dataset)
 
-    model = instantiate(cfg.model, cfg=cfg)
+    model = instantiate(cfg.model)(cfg=cfg)
     state = torch.load(output_dir / "model.pth")
     model.load_state_dict(state)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     test_output = inference_fn(
-        cfg=cfg,
         model=model,
         dataloader=test_dataloader,
         device=device,
@@ -48,7 +47,7 @@ def inference_fold(cfg: DictConfig, test_df: pd.DataFrame) -> np.ndarray:
         if i_fold not in valid_folds:
             continue
         i_test_output = inference_loop(cfg=cfg, test_df=test_df, output_dir=output_dir / f"fold_{i_fold}")
-        test_outputs.append(i_test_output)
+        test_outputs.append(i_test_output["outputs"])
     return np.mean(test_outputs, axis=0)
 
 

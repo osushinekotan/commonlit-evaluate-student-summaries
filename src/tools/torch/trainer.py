@@ -121,7 +121,7 @@ def valid_fn(
 def inference_fn(model: nn.Module, dataloader: DataLoader, device: str) -> dict[str, np.ndarray]:
     outputs = []
     model.to(device)
-    model.inference()
+    model.eval()
 
     iteration_bar = tqdm(enumerate(dataloader), total=len(dataloader))
     for _, batch in iteration_bar:
