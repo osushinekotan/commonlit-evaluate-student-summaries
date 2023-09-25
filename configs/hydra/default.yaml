@@ -4,6 +4,9 @@ defaults:
 
 run:
   dir: ${paths.output_dir}
+sweep:
+  dir: ${paths.resource_dir}/outputs/
+  subdir: ${hydra:job.override_dirname}
 
 job_logging:
   handlers:
