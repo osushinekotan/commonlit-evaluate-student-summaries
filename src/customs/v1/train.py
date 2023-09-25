@@ -135,7 +135,7 @@ def train_loop(
     gc.collect()
 
 
-def train_fold(cfg: DictConfig, train_df: pd.DataFrame) -> np.ndarray:
+def train_fold(cfg: DictConfig, train_df: pd.DataFrame) -> pd.DataFrame:
     num_fold = cfg.num_fold
     valid_folds = cfg.valid_folds
     overwrite_fold = cfg.overwrite_fold
@@ -160,8 +160,15 @@ def train_fold(cfg: DictConfig, train_df: pd.DataFrame) -> np.ndarray:
                     output_dir=i_output_dir,
                 )
 
-        oof_outputs.append(joblib.load(i_output_dir / "output.pkl")["outputs"])
-    return np.concatenate(oof_outputs, axis=0)
+        valid_out_df = pd.concat(
+            [
+                valid_feature_df[["student_id", "prompt_id", "content", "wording"]],
+                pd.DataFrame(joblib.load(i_output_dir / "output.pkl")["outputs"], columns=cfg.target),
+            ],
+            axis=1,
+        )
+        oof_outputs.append(valid_out_df)
+    return pd.concat(oof_outputs, axis=0).reset_index(drop=True)
 
 
 def run(cfg: DictConfig) -> None:
@@ -174,7 +181,8 @@ def run(cfg: DictConfig) -> None:
     logger.debug(f"train_df : {train_df.shape}")
     logger.debug(f"train_df : \n{train_df.head()}")
 
-    oof_output = train_fold(cfg=cfg, train_df=train_df)
+    oof_output: pd.DataFrame = train_fold(cfg=cfg, train_df=train_df)
+    logger.debug(f"oof_output : \n{oof_output.head()}")
     joblib.dump(oof_output, Path(cfg.paths.artifact_dir) / "oof_output.pkl")
 
 
