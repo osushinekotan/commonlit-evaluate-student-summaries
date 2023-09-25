@@ -1,8 +1,10 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import tempfile
+from functools import cached_property
 from pathlib import Path
 
 from kaggle import KaggleApi
@@ -52,6 +54,7 @@ class Deploy:
                 folder=self.cfg.paths.output_dir,
                 public=False,
                 quiet=False,
+                dir_mode="zip",
             )
 
     def push_huguingface_model(self) -> None:
@@ -73,7 +76,49 @@ class Deploy:
                 folder=tempdir,
                 public=True,
                 quiet=False,
+                dir_mode="zip",
             )
+
+    def push_code(self) -> None:
+        dataset_name = re.sub(r"[/_=]", "-", self.cfg.meta.competition)
+        metadata = make_dataset_metadata(dataset_name=dataset_name)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            dst_dir = Path(tempdir) / dataset_name / "src"
+            copytree(src="./src", dst=dst_dir, ignore_patterns=[".git", "__pycache__"])
+            logger.info(f"\ndst_dir={dst_dir}\n\ntree")
+            display_tree(dst_dir, logger=logger)
+
+            with open(dst_dir / "dataset-metadata.json", "w") as f:
+                json.dump(metadata, f, indent=4)
+
+            # update dataset if dataset already exist
+            if exist_dataset(
+                dataset=f'{os.getenv("KAGGLE_USERNAME")}/{dataset_name}', existing_dataset=self.existing_dataset
+            ):
+                print("update src")
+                self.client.dataset_create_version(
+                    folder=dst_dir,
+                    version_notes="latest",
+                    quiet=False,
+                    convert_to_csv=False,
+                    delete_old_versions=True,
+                    dir_mode="zip",
+                )
+            else:
+                print("create dataset of src")
+                self.client.dataset_create_new(folder=dst_dir, public=False, quiet=False, dir_mode="zip")
+
+    @cached_property
+    def existing_dataset(self):
+        return self.client.dataset_list(user=os.getenv("KAGGLE_USERNAME"))
+
+
+def exist_dataset(dataset: str, existing_dataset: list) -> bool:
+    for ds in existing_dataset:
+        if str(ds) == dataset:
+            return True
+    return False
 
 
 def make_dataset_metadata(dataset_name: str) -> dict:
@@ -82,3 +127,43 @@ def make_dataset_metadata(dataset_name: str) -> dict:
     dataset_metadata["licenses"] = [{"name": "CC0-1.0"}]
     dataset_metadata["title"] = dataset_name
     return dataset_metadata
+
+
+def copytree(src: str, dst: str, ignore_patterns: list = []) -> None:
+    if not os.path.exists(dst):
+        os.makedirs(dst)
+
+    for item in os.listdir(src):
+        if any(pattern in item for pattern in ignore_patterns):
+            continue
+
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            copytree(s, d, ignore_patterns)
+        else:
+            shutil.copy2(s, d)
+
+
+def display_tree(directory: Path, file_prefix="", logger=None):
+    entries = list(directory.iterdir())
+    file_count = len(entries)
+
+    for i, entry in enumerate(sorted(entries, key=lambda x: x.name)):
+        # これが最後のエントリかどうかを確認して、接頭辞とnext_prefixを設定
+        if i == file_count - 1:
+            prefix = "└── "
+            next_prefix = file_prefix + "    "
+        else:
+            prefix = "├── "
+            next_prefix = file_prefix + "│   "
+
+        line = file_prefix + prefix + entry.name
+        if logger is None:
+            print(line)
+        else:
+            logger.info(line)
+
+        # ディレクトリの場合は、再帰的にこの関数を呼び出してツリーを表示
+        if entry.is_dir():
+            display_tree(entry, next_prefix)
