@@ -12,3 +12,6 @@ job_logging:
   handlers:
     file:
       filename: ${hydra.runtime.output_dir}/${hydra.job.name}.log
+  root:
+    level: DEBUG
+  verbose: true
