@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from fnmatch import fnmatch
 from functools import cached_property
 from pathlib import Path
 
@@ -47,23 +48,45 @@ class Deploy:
         # model and predictions
         dataset_name = re.sub(r"[/_=]", "-", self.cfg.experiment_name)
         metadata = make_dataset_metadata(dataset_name=dataset_name)
+
+        # if exist dataset, stop pushing
+        if exist_dataset(
+            dataset=f'{os.getenv("KAGGLE_USERNAME")}/{dataset_name}',
+            existing_dataset=self.existing_dataset,
+        ):
+            logger.info(f"{dataset_name} already exist!! Stop pushing.")
+            return
+
         with tempfile.TemporaryDirectory() as tempdir:
-            with open(Path(tempdir) / "dataset-metadata.json", "w") as f:
+            dst_dir = Path(tempdir) / dataset_name
+
+            copytree(src=self.cfg.paths.output_dir, dst=dst_dir, ignore_patterns=[".git", "__pycache__"])
+            self._display_tree(dst_dir=dst_dir)
+
+            with open(Path(dst_dir) / "dataset-metadata.json", "w") as f:
                 json.dump(metadata, f, indent=4)
             self.client.dataset_create_new(
-                folder=self.cfg.paths.output_dir,
+                folder=dst_dir,
                 public=False,
                 quiet=False,
                 dir_mode="zip",
             )
 
     def push_huguingface_model(self) -> None:
-        # pretrained tokenizer and config
         model_name = self.cfg.model_name
+        dataset_name = re.sub(r"[/_]", "-", model_name)
+
+        # if exist dataset, stop pushing
+        if exist_dataset(
+            dataset=f'{os.getenv("KAGGLE_USERNAME")}/{dataset_name}',
+            existing_dataset=self.existing_dataset,
+        ):
+            logger.info(f"{dataset_name} already exist!! Stop pushing.")
+            return
+
+        # pretrained tokenizer and config
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         config = AutoConfig.from_pretrained(model_name)
-
-        dataset_name = re.sub(r"[/_]", "-", model_name)
         metadata = make_dataset_metadata(dataset_name=dataset_name)
 
         with tempfile.TemporaryDirectory() as tempdir:
@@ -86,8 +109,7 @@ class Deploy:
         with tempfile.TemporaryDirectory() as tempdir:
             dst_dir = Path(tempdir) / dataset_name / "src"
             copytree(src="./src", dst=dst_dir, ignore_patterns=[".git", "__pycache__"])
-            logger.info(f"\ndst_dir={dst_dir}\n\ntree")
-            display_tree(dst_dir, logger=logger)
+            self._display_tree(dst_dir=dst_dir)
 
             with open(dst_dir / "dataset-metadata.json", "w") as f:
                 json.dump(metadata, f, indent=4)
@@ -96,7 +118,7 @@ class Deploy:
             if exist_dataset(
                 dataset=f'{os.getenv("KAGGLE_USERNAME")}/{dataset_name}', existing_dataset=self.existing_dataset
             ):
-                print("update src")
+                logger.info("update src")
                 self.client.dataset_create_version(
                     folder=dst_dir,
                     version_notes="latest",
@@ -106,12 +128,17 @@ class Deploy:
                     dir_mode="zip",
                 )
             else:
-                print("create dataset of src")
+                logger.info("create dataset of src")
                 self.client.dataset_create_new(folder=dst_dir, public=False, quiet=False, dir_mode="zip")
 
     @cached_property
     def existing_dataset(self):
         return self.client.dataset_list(user=os.getenv("KAGGLE_USERNAME"))
+
+    @staticmethod
+    def _display_tree(dst_dir: Path) -> None:
+        logger.info(f"dst_dir={dst_dir}\ntree")
+        display_tree(dst_dir)
 
 
 def exist_dataset(dataset: str, existing_dataset: list) -> bool:
@@ -134,7 +161,7 @@ def copytree(src: str, dst: str, ignore_patterns: list = []) -> None:
         os.makedirs(dst)
 
     for item in os.listdir(src):
-        if any(pattern in item for pattern in ignore_patterns):
+        if any(fnmatch(item, pattern) for pattern in ignore_patterns):
             continue
 
         s = os.path.join(src, item)
@@ -145,12 +172,11 @@ def copytree(src: str, dst: str, ignore_patterns: list = []) -> None:
             shutil.copy2(s, d)
 
 
-def display_tree(directory: Path, file_prefix="", logger=None):
+def display_tree(directory: Path, file_prefix="") -> None:
     entries = list(directory.iterdir())
     file_count = len(entries)
 
     for i, entry in enumerate(sorted(entries, key=lambda x: x.name)):
-        # これが最後のエントリかどうかを確認して、接頭辞とnext_prefixを設定
         if i == file_count - 1:
             prefix = "└── "
             next_prefix = file_prefix + "    "
@@ -159,11 +185,7 @@ def display_tree(directory: Path, file_prefix="", logger=None):
             next_prefix = file_prefix + "│   "
 
         line = file_prefix + prefix + entry.name
-        if logger is None:
-            print(line)
-        else:
-            logger.info(line)
+        print(line)
 
-        # ディレクトリの場合は、再帰的にこの関数を呼び出してツリーを表示
         if entry.is_dir():
             display_tree(entry, next_prefix)
