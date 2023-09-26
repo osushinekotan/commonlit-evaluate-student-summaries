@@ -163,7 +163,10 @@ def train_fold(cfg: DictConfig, train_df: pd.DataFrame) -> pd.DataFrame:
         valid_out_df = pd.concat(
             [
                 valid_feature_df[["student_id", "prompt_id", "content", "wording"]],
-                pd.DataFrame(joblib.load(i_output_dir / "output.pkl")["outputs"], columns=cfg.target),
+                pd.DataFrame(
+                    joblib.load(i_output_dir / "output.pkl")["outputs"],
+                    columns=cfg.target,
+                ).add_prefix("preds_"),
             ],
             axis=1,
         )

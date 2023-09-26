@@ -1,0 +1,14 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+experiment_name: ${hydra:job.override_dirname}
+
+evaluate: true
+agg_method: "mean"
+emsemble_seeds: ["000"]
+submission_dir: "resources/misc"
+
+metrics:
+  _target_: src.tools.torch.metrics.MCRMSEScore
