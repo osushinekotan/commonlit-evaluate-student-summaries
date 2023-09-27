@@ -103,12 +103,17 @@ class Deploy:
             )
 
     def push_code(self) -> None:
-        dataset_name = re.sub(r"[/_=]", "-", self.cfg.meta.competition)
+        dataset_name = "my-code-" + re.sub(r"[/_=]", "-", self.cfg.meta.competition)
         metadata = make_dataset_metadata(dataset_name=dataset_name)
 
         with tempfile.TemporaryDirectory() as tempdir:
-            dst_dir = Path(tempdir) / dataset_name / "src"
-            copytree(src="./src", dst=dst_dir, ignore_patterns=[".git", "__pycache__"])
+            dst_dir = Path(tempdir) / dataset_name
+
+            # for src directory
+            dst_dir.mkdir(exist_ok=True, parents=True)
+            shutil.copy("./README.md", dst_dir)
+
+            copytree(src="./src", dst=dst_dir / "src", ignore_patterns=[".git", "__pycache__"])
             self._display_tree(dst_dir=dst_dir)
 
             with open(dst_dir / "dataset-metadata.json", "w") as f:
