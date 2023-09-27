@@ -50,7 +50,7 @@ class SimpleEmsemble:
 
 
 def make_submission(cfg: DictConfig, test_preds: np.ndarray) -> None:
-    submission_dir = Path(cfg.submission_dir)
+    submission_dir = Path(cfg.paths.submission_dir)
     submission_dir.mkdir(parents=True, exist_ok=True)
     submission_df = pd.read_csv(Path(cfg.paths.input_dir) / "sample_submission.csv")
     submission_df[["content", "wording"]] = test_preds
