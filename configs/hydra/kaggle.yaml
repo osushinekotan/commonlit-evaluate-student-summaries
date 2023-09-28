@@ -1,0 +1,17 @@
+defaults:
+  - override hydra_logging: colorlog
+  - override job_logging: colorlog
+
+run:
+  dir: "/kaggle/working/"
+sweep:
+  dir: ${paths.resource_dir}/outputs/
+  subdir: ${hydra:job.override_dirname}
+
+job_logging:
+  handlers:
+    file:
+      filename: /kaggle/working/${hydra.job.name}.log
+  root:
+    level: DEBUG
+  verbose: true

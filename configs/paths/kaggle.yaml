@@ -1,0 +1,13 @@
+# Use the following paths for inference in Kaggle code competitions:
+
+# path to root directory
+root_dir: "/kaggle/working/"
+
+# path to resources directory
+resource_dir: ${paths.root_dir}/
+input_dir: "/kaggle/input/${meta.competition}"
+output_dir: ??? # set your uploaded dataset name (...)
+artifact_dir: ${paths.output_dir}/artifacts/
+misc_dir: ${paths.resource_dir}/misc/
+
+submission_dir: ${paths.root_dir} # inference output

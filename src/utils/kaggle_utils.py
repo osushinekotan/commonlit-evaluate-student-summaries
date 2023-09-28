@@ -46,7 +46,7 @@ class Deploy:
 
     def push_output(self) -> None:
         # model and predictions
-        dataset_name = re.sub(r"[/_=]", "-", self.cfg.experiment_name)
+        dataset_name = self.cfg.meta.alias + "-" + re.sub(r"[/_=]", "-", self.cfg.experiment_name)
         metadata = make_dataset_metadata(dataset_name=dataset_name)
 
         # if exist dataset, stop pushing
