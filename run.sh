@@ -20,6 +20,9 @@ cd ~/../workspace/
 # Iterate over the remaining arguments (tasks)
 for task in "$@"; do
     case $task in
+      load_data)
+        poetry run python src/customs/v1/load_data.py experiment=${exp}
+        ;;
       preprocess)
         poetry run python src/customs/v1/preprocess.py experiment=${exp}
         ;;
@@ -29,11 +32,14 @@ for task in "$@"; do
       inference)
         poetry run python src/customs/v1/inference.py experiment=${exp}
         ;;
+      ensemble)
+        poetry run python src/customs/v1/ensemble.py experiment=${exp}
+        ;;
       deploy)
         poetry run python src/customs/deploy.py experiment=${exp}
         ;;
       *)
-        echo "Invalid task name: $task! Available tasks: preprocess, train, inference, deploy."
+        echo "Invalid task name: $task! Available tasks: load_data, preprocess, train, inference, ensemble, deploy."
         ;;
     esac
 done
