@@ -5,7 +5,9 @@ root_dir: "/kaggle/working/"
 
 # path to resources directory
 resource_dir: ${paths.root_dir}/
-input_dir: "/kaggle/input/${meta.competition}"
+input_root_dir: "/kaggle/input/"
+input_dir: "${paths.input_root_dir}/${meta.competition}"
+
 output_dir: ??? # set your uploaded dataset name (...)
 artifact_dir: ${paths.output_dir}/artifacts/
 misc_dir: ${paths.resource_dir}/misc/

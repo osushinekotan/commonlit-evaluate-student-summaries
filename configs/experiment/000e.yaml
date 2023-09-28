@@ -9,7 +9,7 @@ evaluate: true
 agg_method: "mean"
 emsemble_seeds: ["000"]
 
-infer_in_kaggle: false
+in_kaggle: false
 
 metrics:
   _target_: src.tools.torch.metrics.MCRMSEScore
