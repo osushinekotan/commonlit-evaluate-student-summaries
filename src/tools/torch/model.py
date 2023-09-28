@@ -4,11 +4,15 @@ from transformers import AutoConfig, AutoModel
 
 
 class CommonLitModelV1(nn.Module):
-    def __init__(self, cfg: DictConfig):
+    def __init__(self, cfg: DictConfig, pretrained: bool = True):
         super().__init__()
 
         self.model_config = AutoConfig.from_pretrained(cfg.model_name, output_hidden_states=True)
-        self.model = AutoModel.from_pretrained(cfg.model_name, config=self.model_config)
+
+        if pretrained:
+            self.model = AutoModel.from_pretrained(cfg.model_name, config=self.model_config)
+        else:
+            self.model = AutoModel.from_config(config=self.model_config)
 
         if cfg.gradient_checkpointing_enable:
             self.model.gradient_checkpointing_enable()

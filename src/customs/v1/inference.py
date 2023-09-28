@@ -23,7 +23,7 @@ def inference_loop(cfg: DictConfig, test_df: pd.DataFrame, output_dir: Path) -> 
     test_dataset = instantiate(cfg.dataset.test_dataset)(cfg=cfg, df=test_df)
     test_dataloader = instantiate(cfg.test_dataloader)(dataset=test_dataset)
 
-    model = instantiate(cfg.model)(cfg=cfg)
+    model = instantiate(cfg.model)(cfg=cfg, pretrained=False)
     state = torch.load(output_dir / "model.pth")
     model.load_state_dict(state)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
