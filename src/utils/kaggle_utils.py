@@ -114,6 +114,7 @@ class Deploy:
             shutil.copy("./README.md", dst_dir)
 
             copytree(src="./src", dst=dst_dir / "src", ignore_patterns=[".git", "__pycache__"])
+            copytree(src="./configs", dst=dst_dir / "configs", ignore_patterns=[".git", "__pycache__"])
             self._display_tree(dst_dir=dst_dir)
 
             with open(dst_dir / "dataset-metadata.json", "w") as f:
@@ -123,7 +124,7 @@ class Deploy:
             if exist_dataset(
                 dataset=f'{os.getenv("KAGGLE_USERNAME")}/{dataset_name}', existing_dataset=self.existing_dataset
             ):
-                logger.info("update src")
+                logger.info("update code")
                 self.client.dataset_create_version(
                     folder=dst_dir,
                     version_notes="latest",
@@ -133,7 +134,7 @@ class Deploy:
                     dir_mode="zip",
                 )
             else:
-                logger.info("create dataset of src")
+                logger.info("create dataset of code")
                 self.client.dataset_create_new(folder=dst_dir, public=False, quiet=False, dir_mode="zip")
 
     @cached_property
