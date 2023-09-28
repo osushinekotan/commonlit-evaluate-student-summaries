@@ -10,4 +10,5 @@ output_dir: ??? # set your uploaded dataset name (...)
 artifact_dir: ${paths.output_dir}/artifacts/
 misc_dir: ${paths.resource_dir}/misc/
 
-submission_dir: ${paths.root_dir} # inference output
+inference_dir: ??? # set output dir in kaggle kernel
+submission_dir: ${paths.root_dir} # submission output

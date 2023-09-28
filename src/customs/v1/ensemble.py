@@ -19,8 +19,10 @@ class SimpleEmsemble:
         self.metrics = instantiate(cfg.metrics)
 
     def _get_file_paths(self, filename: str) -> list[Path]:
-        base_path = Path(self.cfg.paths.resource_dir) / "outputs"
-        return [base_path / seed / "artifacts" / filename for seed in self.seeds]
+        if not self.cfg.infer_in_kaggle:
+            base_path = Path(self.cfg.paths.resource_dir) / "outputs"
+            return [base_path / seed / "artifacts" / filename for seed in self.seeds]
+        return [Path(self.cfg.paths.root_dir) / seed / filename for seed in self.cfg.emsemble_seeds]
 
     def _aggregate_predictions(self, predictions: list) -> np.ndarray:
         agg_method = self.cfg.agg_method

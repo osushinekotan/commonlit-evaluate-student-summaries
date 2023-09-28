@@ -61,7 +61,10 @@ def preprocess(cfg: DictConfig) -> pd.DataFrame:
 def run(cfg: DictConfig) -> None:
     test_df = preprocess(cfg=cfg)
     test_output = inference_fold(cfg=cfg, test_df=test_df)
-    joblib.dump(test_output, Path(cfg.paths.submission_dir) / "test_output.pkl")
+
+    dirpath = Path(cfg.paths.inference_dir)
+    dirpath.mkdir(parents=True, exist_ok=True)
+    joblib.dump(test_output, dirpath / "test_output.pkl")
 
 
 @hydra.main(version_base=None, config_path="/workspace/configs/", config_name="config")

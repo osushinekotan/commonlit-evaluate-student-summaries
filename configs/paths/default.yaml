@@ -8,4 +8,5 @@ output_dir: ${paths.resource_dir}/outputs/${hydra:job.override_dirname}/
 artifact_dir: ${paths.output_dir}/artifacts/
 misc_dir: ${paths.resource_dir}/misc/
 
-submission_dir: ${paths.artifact_dir} # inference output
+inference_dir: ${paths.artifact_dir} # inference output
+submission_dir: ${paths.artifact_dir}
