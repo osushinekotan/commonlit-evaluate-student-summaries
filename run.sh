@@ -21,7 +21,7 @@ cd ~/../workspace/
 for task in "$@"; do
     case $task in
       load_data)
-        poetry run python src/customs/v1/load_data.py experiment=${exp}
+        poetry run python src/customs/load_data.py experiment=${exp}
         ;;
       preprocess)
         poetry run python src/customs/v1/preprocess.py experiment=${exp}

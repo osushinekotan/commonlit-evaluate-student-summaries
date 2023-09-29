@@ -1,0 +1,80 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /dataset: default
+  - override /model: default
+  - override /optimizer: default
+  - override /scheduler: default
+
+experiment_name: ${hydra:job.override_dirname}
+seed: 8823
+debug: false
+overwrite_fold: false
+overwrite_preprocess: false
+
+num_fold: 10
+valid_folds: [0]
+target: ["content", "wording"]
+
+fold:
+  _target_: sklearn.model_selection.StratifiedGroupKFold
+  n_splits: ${num_fold}
+  shuffle: true
+  random_state: 8823
+
+model_name: "microsoft/deberta-v3-large"
+max_length: 1024
+gradient_checkpointing_enable: true
+
+max_epochs: 4
+gradient_accumulation_steps: 1
+batch_scheduler: true
+fp16: true
+clip_grad_norm: 1
+
+train_dataloader:
+  _target_: torch.utils.data.DataLoader
+  _partial_: true
+  batch_size: 24
+  num_workers: 4
+  pin_memory: true
+  drop_last: true
+
+valid_dataloader:
+  _target_: torch.utils.data.DataLoader
+  _partial_: true
+  batch_size: 128
+  num_workers: 4
+  pin_memory: true
+  drop_last: false
+
+test_dataloader:
+  _target_: torch.utils.data.DataLoader
+  _partial_: true
+  batch_size: 64
+  num_workers: 4
+  pin_memory: true
+  drop_last: false
+
+optimizer:
+  _target_: torch.optim.AdamW
+  _partial_: true
+  lr: 2.0e-5
+  weight_decay: 0
+  eps: 1.0e-6
+  betas: [0.9, 0.999]
+
+scheduler:
+  _target_: transformers.get_cosine_schedule_with_warmup
+  _partial_: true
+  num_warmup_steps: 100
+  num_cycles: 0.5
+
+criterion:
+  _target_: src.tools.torch.criterion.MCRMSELoss
+
+metrics:
+  _target_: src.tools.torch.metrics.MCRMSEScore
