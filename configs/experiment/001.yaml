@@ -25,20 +25,20 @@ fold:
   shuffle: true
   random_state: 8823
 
-model_name: "microsoft/deberta-v3-large"
+model_name: "microsoft/deberta-v3-base"
 max_length: 1024
 gradient_checkpointing_enable: true
 
-max_epochs: 4
+max_epochs: 8
 gradient_accumulation_steps: 1
 batch_scheduler: true
 fp16: true
-clip_grad_norm: 1
+clip_grad_norm: 10000
 
 train_dataloader:
   _target_: torch.utils.data.DataLoader
   _partial_: true
-  batch_size: 24
+  batch_size: 16
   num_workers: 4
   pin_memory: true
   drop_last: true
@@ -46,7 +46,7 @@ train_dataloader:
 valid_dataloader:
   _target_: torch.utils.data.DataLoader
   _partial_: true
-  batch_size: 128
+  batch_size: 32
   num_workers: 4
   pin_memory: true
   drop_last: false
@@ -54,7 +54,7 @@ valid_dataloader:
 test_dataloader:
   _target_: torch.utils.data.DataLoader
   _partial_: true
-  batch_size: 64
+  batch_size: 32
   num_workers: 4
   pin_memory: true
   drop_last: false
@@ -62,7 +62,7 @@ test_dataloader:
 optimizer:
   _target_: torch.optim.AdamW
   _partial_: true
-  lr: 2.0e-5
+  lr: 1.0e-5
   weight_decay: 0
   eps: 1.0e-6
   betas: [0.9, 0.999]
@@ -70,7 +70,7 @@ optimizer:
 scheduler:
   _target_: transformers.get_cosine_schedule_with_warmup
   _partial_: true
-  num_warmup_steps: 100
+  num_warmup_steps: 0
   num_cycles: 0.5
 
 criterion:
