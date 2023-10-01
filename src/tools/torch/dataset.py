@@ -13,13 +13,13 @@ class CommonlitDatasetV1(Dataset):
         self.max_length = cfg.max_length
 
         self.texts = (
-            df["text"]
-            + self.tokenizer.sep_token
-            + df["prompt_title"]
+            df["prompt_title"]
             + self.tokenizer.sep_token
             + df["prompt_question"]
             + self.tokenizer.sep_token
-            + df["prompt_text"]
+            + df["text"]
+            # + self.tokenizer.sep_token
+            # + df["prompt_text"]
         ).tolist()
 
         if self.is_train:

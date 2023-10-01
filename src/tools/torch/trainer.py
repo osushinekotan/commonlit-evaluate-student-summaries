@@ -40,7 +40,7 @@ def train_fn(
         with autocast(enabled=enable_amp):
             batch_outputs = model(batch)
             loss = criterion(batch_outputs, batch["targets"])
-            loss = torch.div(loss, gradient_accumulation_steps)
+            # loss = torch.div(loss, gradient_accumulation_steps)
 
         loss_value = loss.item()
         scaler.scale(loss).backward()
@@ -84,8 +84,6 @@ def valid_fn(
     criterion: nn.Module,
     device: str,
 ):
-    gradient_accumulation_steps = cfg.gradient_accumulation_steps
-
     outputs = []
     total_loss = 0.0
     batch_count = 0
@@ -101,7 +99,6 @@ def valid_fn(
         with torch.no_grad():
             batch_outputs = model(batch)
             loss = criterion(batch_outputs, batch["targets"])
-            loss = torch.div(loss, gradient_accumulation_steps)
 
         loss_value = loss.item()
         batch_outputs = batch_outputs.cpu().numpy()
